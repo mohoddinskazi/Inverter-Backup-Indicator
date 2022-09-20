@@ -1,0 +1,129 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h> 
+
+LiquidCrystal_I2C lcd(0x27,20,4);
+#include <Adafruit_INA219.h> 
+
+Adafruit_INA219 ina219; //cs initial
+
+// Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
+//LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+const int voltageSensor = A0;  // voltage sensor asign
+void setup(void) 
+{
+  
+  Serial.begin(115200);
+  lcd.backlight();
+  lcd.begin(16, 2); 
+   
+  while (!Serial) {
+      // will pause Zero, Leonardo, etc until serial console opens
+    delay(1);
+  }
+
+  uint32_t currentFrequency;
+    
+  Serial.println("Hello!");
+  lcd.clear();
+  lcd.print(" Hello!");
+  
+  if (! ina219.begin()) {
+    Serial.println("Failed to find INA219 chip");
+    lcd.clear();
+    lcd.print(" Failed ");
+    while (1) {
+      delay(10); 
+      }
+  }
+
+    Serial.println("Measuring voltage and current with INA219 ...");
+    lcd.clear();
+    lcd.print("Measuring.... ");
+    delay(2000);
+}
+
+void loop(void) 
+{
+  float shuntvoltage = 0;
+  float busvoltage = 0;
+  float current_mA = 0;
+  float loadvoltage = 0;
+  float power_mW = 0;
+  float current_amp =0;
+  float cap = 2.2;
+  float t = 0;
+  float m = 0;
+  float vOUT = 0.0;
+  float vIN = 0.0;
+  float R1 = 30000.0;
+  float R2 = 7500.0;
+  int value = 0;
+  float capnow =0;
+  float vhigh = 8.2;
+  float vlow = 6.6;
+  float k, know, per;
+ 
+
+  value = analogRead(voltageSensor);
+  vOUT = (value * 5.0) / 1024.0;
+  vIN = vOUT / (R2/(R1+R2));
+
+ 
+  lcd.setCursor(0,0);
+  lcd.print(" Vout =         ");
+  lcd.setCursor(9,0);
+  lcd.print(vIN);
+  delay(4000);
+
+  //battery percentage calculations
+  
+  k = vhigh-vlow;
+  know = vhigh - vIN;
+  per = ((k - know)/k)*100;
+
+  lcd.setCursor(0,0);
+  lcd.print(" Bat =         ");
+  lcd.setCursor(9,0);
+  lcd.print(per);
+  lcd.setCursor(15,0);
+  lcd.print("%");
+  delay(4000);
+  
+  shuntvoltage = ina219.getShuntVoltage_mV(); //cs r v
+  busvoltage = ina219.getBusVoltage_V(); // cs in v
+  current_mA = ina219.getCurrent_mA(); //cs op
+  current_amp = current_mA / 1000;
+  power_mW = ina219.getPower_mW();
+  loadvoltage = busvoltage + (shuntvoltage / 1000);
+
+  // battary remaining amper hour calculation
+  
+  capnow = (per/100)* 2.2;
+
+  //time calculation
+  
+  t = capnow / current_amp;
+  m = t * 60;  
+  
+  Serial.print("Current:       ");
+  Serial.print(current_amp);
+  Serial.println(" mA");
+  delay(2000);
+  
+  lcd.clear();
+  lcd.print("Current = ");
+  lcd.print(current_amp);
+
+  delay(4000);
+  
+  Serial.print("Time:   ");
+  Serial.print(m,4);
+  Serial.println(" Min");
+  
+  lcd.clear();
+  lcd.print("Time = ");
+  lcd.print(m);
+  lcd.print(" Min");
+  
+  delay(4000);
+}

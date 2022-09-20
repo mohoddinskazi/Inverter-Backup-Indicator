@@ -1,0 +1,111 @@
+#include<Wire.h>
+#include<LiquidCrystal_I2C.h>
+#include<Adafruit_INA219.h>
+
+LiquidCrystal_I2C lcd(0x20,16,2);
+Adafruit_INA219 ina219;
+
+int analogInput = A0;
+
+void setup() {
+  lcd.backlight();
+  lcd.begin(16,2);
+  lcd.setCursor(0,0);
+  lcd.print("Backup TIme");
+  lcd.setCursor(3,1);
+  lcd.print("Indicator");
+  delay(200);
+  lcd.clear();
+
+  uint32_t currentFrequency;
+   if (! ina219.begin()) {
+    lcd.clear();
+    lcd.print(" Failed ");
+    while (1) {
+      delay(10); 
+      }
+  }
+   lcd.clear();
+    lcd.print("Measuring.... ");
+    delay(200);
+
+}
+
+void loop() {
+  float current_mA = 0;
+  float current_amp =0;
+  float power_mW =0;
+
+float vout=0;
+float vin=0;
+float R1=7500.0;
+float R2=5070.0;
+float vhigh = 8.4;
+float vlow = 6.8;
+float cap = 2.2;
+float k=0;
+float know=0;
+float capnow=0;
+float per=0;
+int percentage=0;
+int val=0;
+int T_hrs=0;
+float T_min=0;
+float a,b,tot=0;
+int m;
+
+//***********************Read Battery Voltage And Percentage of battery Calulation***************
+  val=analogRead(analogInput);
+  vout=(val*5.0)/1024.0;
+  vin= vout/(R2/(R1+R2));
+
+  k = vhigh -vlow;
+  know = vhigh - vin;
+  //k=1.6;
+  per = ((k - know)/k);
+  percentage=per*100;
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Bat Volt : ");
+  lcd.setCursor(10,0);
+  lcd.print(vin);
+  lcd.print("v");
+  lcd.setCursor(0,1);
+  lcd.print("Bat% : ");
+  lcd.setCursor(8,1);
+  lcd.print(percentage);
+  lcd.print("%");
+  delay(200);
+
+//*************************Current sensing and Calculation**********************
+  current_mA = ina219.getCurrent_mA();
+  current_amp = current_mA / 1000;
+  float c=0;
+  c=current_amp;
+  capnow=(per)*cap;
+  tot = capnow/c;
+  //T_min = T_hrs * 60;
+  T_hrs=tot;
+  a = tot - T_hrs;
+  T_min=a*60;
+  m=T_min;
+  lcd.clear();
+  lcd.print("Current : ");
+  lcd.print(current_amp);
+  lcd.print("A");
+  lcd.setCursor(0,1);
+  lcd.print("Capacity: ");
+  lcd.print(capnow);
+  lcd.print("Ah");
+  delay(200);
+
+  lcd.clear();
+  lcd.print("Backup Time : ");
+  lcd.setCursor(3,1);
+  lcd.print(T_hrs);
+  lcd.print("h ");
+  lcd.print(m);
+  lcd.print("min");
+  delay(200);
+
+}
