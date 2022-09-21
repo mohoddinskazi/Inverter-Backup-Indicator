@@ -1,5 +1,6 @@
 # Inverter-Backup-Indicator
 Inverter Backup Indicator Using Arduino Nano
+
 Iridescent India have inverter battery indicator, however shows the last level of limit. The 90% of inverter fabricates 
 has no limit demonstrating worked in framework in their inverters. Remaining inverter with indictors is an excess of 
 exorbitant. The inverter backup time indicator will assist us with figuring out the number of time will endure inverter 
